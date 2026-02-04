@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"lammps_import_export/structs"
+	"lammps-file-parser/parser"
 	"os"
 )
 
@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	lammpsStruct, err := Parse(content)
+	lammpsStruct, err := parser.Parse(content)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -55,9 +55,4 @@ func getFileContent(filename string) (string, error) {
 	} else {
 		return "", err
 	}
-}
-
-func Parse(content string) (structs.LammpsStruct, error) {
-	loader := structs.LammpsLoader{}
-	return loader.Load(content)
 }
