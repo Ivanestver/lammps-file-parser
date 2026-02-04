@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"lammps-file-parser/parser"
 	"os"
+
+	"github.com/Ivanestver/lammps-file-parser/parser"
 )
 
 func main() {

@@ -1,6 +1,6 @@
 package parser
 
-import "lammps-file-parser/structs"
+import "github.com/Ivanestver/lammps-file-parser/structs"
 
 func Parse(content string) (structs.LammpsStruct, error) {
 	loader := structs.LammpsLoader{}
