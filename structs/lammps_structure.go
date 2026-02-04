@@ -9,8 +9,9 @@ import (
 )
 
 type LammpsStruct struct {
-	Atoms []Atom
-	Bonds []Bond
+	FileName string
+	Atoms    []Atom
+	Bonds    []Bond
 }
 
 type _LammpsMetadata struct {
@@ -255,8 +256,9 @@ func (loader *LammpsLoader) loadAtoms() error {
 		}
 
 		atomTypeNumber := parts[2]
+		atomType, _ := strconv.Atoi(atomTypeNumber)
 
-		// Miss the charge because of needing it
+		// Miss the charge because of not needing it
 
 		x, err := strconv.ParseFloat(parts[4], 64)
 		if err != nil {
@@ -273,14 +275,10 @@ func (loader *LammpsLoader) loadAtoms() error {
 			return err
 		}
 
-		literals := make(map[int]string)
-		literals[0] = "O"
-		literals[1] = "N"
-		literals[2] = "C"
-		literals[3] = "S"
 		monomer := NewAtom(loader.atomTypes[atomTypeNumber].Label,
 			int(atomID),
 			polymerID,
+			atomType,
 			0.0,
 			x,
 			y,
@@ -292,15 +290,6 @@ func (loader *LammpsLoader) loadAtoms() error {
 		}{Atom: monomer, ChainNumber: polymerID}
 	}
 	return nil
-}
-
-func getMonomerTypeByLiteral(literals map[int]string, literal string) int {
-	for key, value := range literals {
-		if value == literal {
-			return key
-		}
-	}
-	return -1
 }
 
 func (loader *LammpsLoader) loadBonds() error {

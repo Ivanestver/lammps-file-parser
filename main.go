@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	lammpsStruct, err := parser.Parse(content)
+	lammpsStruct, err := parser.Parse(content, *infilePtr)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

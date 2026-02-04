@@ -12,15 +12,17 @@ type Atom struct {
 	Label      string
 	AtomID     int
 	MoleculeID int
+	AtomType   int
 	Q          float64
 	AtomCoords
 }
 
-func NewAtom(label string, atomId, moleculeId int, q, x, y, z float64) *Atom {
+func NewAtom(label string, atomId, moleculeId, atomType int, q, x, y, z float64) *Atom {
 	return &Atom{
 		Label:      label,
 		AtomID:     atomId,
 		MoleculeID: moleculeId,
+		AtomType:   atomType,
 		Q:          q,
 		AtomCoords: AtomCoords{
 			X: x,
