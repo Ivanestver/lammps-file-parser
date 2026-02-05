@@ -14,6 +14,23 @@ type LammpsStruct struct {
 	Bonds    []Bond
 }
 
+func NewLammpsStruct() *LammpsStruct {
+	obj := &LammpsStruct{}
+	obj.Atoms = make([]Atom, 0)
+	obj.Bonds = make([]Bond, 0)
+	return obj
+}
+
+type _Atoms []*Atom
+
+func (atoms _Atoms) setAtom(atom *Atom) {
+	atoms[atom.AtomID-1] = atom
+}
+
+func (atoms _Atoms) getAtom(atomID int) *Atom {
+	return atoms[atomID-1]
+}
+
 type _LammpsMetadata struct {
 	atomsCount     int
 	atomTypesCount int
@@ -27,23 +44,20 @@ type _LammpsMetadata struct {
 		sth1 int
 		sth2 float64
 	}
-	atoms map[int64]struct {
-		Atom        *Atom
-		ChainNumber int
-	}
+	atoms _Atoms
 	bonds []*Bond
 }
 
 type LammpsLoader struct {
 	_LammpsMetadata
-	builtGlobula LammpsStruct
+	builtGlobula *LammpsStruct
 	scanner      *bufio.Scanner
 }
 
-func (loader *LammpsLoader) Load(content string) (LammpsStruct, error) {
+func (loader *LammpsLoader) Load(content string) (*LammpsStruct, error) {
 	loader.scanner = bufio.NewScanner(strings.NewReader(content))
 	if err := loader.load(); err != nil {
-		return LammpsStruct{}, err
+		return nil, err
 	}
 	loader.scanner = nil
 	return loader.builtGlobula, nil
@@ -86,10 +100,7 @@ func (loader *LammpsLoader) loadMetadata() error {
 			break
 		}
 	}
-	loader.atoms = make(map[int64]struct {
-		Atom        *Atom
-		ChainNumber int
-	})
+	loader.atoms = make([]*Atom, loader.atomsCount)
 
 	// read atoms types section
 	if err := writeMetadata(loader, &loader.atomTypesCount, "atom types"); err != nil {
@@ -172,10 +183,10 @@ func (loader *LammpsLoader) loadMasses() error {
 			return err
 		}
 		literals := make(map[int]string)
-		literals[0] = "O"
-		literals[1] = "N"
-		literals[2] = "C"
-		literals[3] = "S"
+		literals[1] = "O"
+		literals[2] = "N"
+		literals[3] = "C"
+		literals[4] = "S"
 		var label string
 		if len(parts) > 2 {
 			label = parts[3]
@@ -275,7 +286,7 @@ func (loader *LammpsLoader) loadAtoms() error {
 			return err
 		}
 
-		monomer := NewAtom(loader.atomTypes[atomTypeNumber].Label,
+		atom := NewAtom(loader.atomTypes[atomTypeNumber].Label,
 			int(atomID),
 			polymerID,
 			atomType,
@@ -284,10 +295,7 @@ func (loader *LammpsLoader) loadAtoms() error {
 			y,
 			z)
 
-		loader.atoms[atomID] = struct {
-			Atom        *Atom
-			ChainNumber int
-		}{Atom: monomer, ChainNumber: polymerID}
+		loader.atoms.setAtom(atom)
 	}
 	return nil
 }
@@ -323,19 +331,19 @@ func (loader *LammpsLoader) loadBonds() error {
 			return err
 		}
 
-		firstAtom := loader.atoms[firstAtomID]
-		secondAtom := loader.atoms[secondAtomID]
+		firstAtom := loader.atoms.getAtom(int(firstAtomID))
+		secondAtom := loader.atoms.getAtom(int(secondAtomID))
 
-		bond := NewBond(bondID, connectionType, [2]*Atom{firstAtom.Atom, secondAtom.Atom})
+		bond := NewBond(bondID, connectionType, [2]*Atom{firstAtom, secondAtom})
 		loader.bonds = append(loader.bonds, bond)
 	}
 	return nil
 }
 
 func (loader *LammpsLoader) constructLammpsStruct() error {
-	loader.builtGlobula = LammpsStruct{}
+	loader.builtGlobula = NewLammpsStruct()
 	for i := range loader.atoms {
-		loader.builtGlobula.Atoms = append(loader.builtGlobula.Atoms, *loader.atoms[i].Atom)
+		loader.builtGlobula.Atoms = append(loader.builtGlobula.Atoms, *loader.atoms[i])
 	}
 	for i := range loader.bonds {
 		loader.builtGlobula.Bonds = append(loader.builtGlobula.Bonds, *loader.bonds[i])

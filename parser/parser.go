@@ -2,7 +2,12 @@ package parser
 
 import "github.com/Ivanestver/lammps-file-parser/structs"
 
-func Parse(content, name string) (structs.LammpsStruct, error) {
+func Parse(content, fileName string) (*structs.LammpsStruct, error) {
 	loader := structs.LammpsLoader{}
-	return loader.Load(content)
+	if result, err := loader.Load(content); err != nil {
+		return nil, err
+	} else {
+		result.FileName = fileName
+		return result, nil
+	}
 }
