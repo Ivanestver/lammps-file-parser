@@ -31,21 +31,24 @@ func (atoms _Atoms) getAtom(atomID int) *Atom {
 	return atoms[atomID-1]
 }
 
+type _MiddleAtom struct {
+	Mass  float64
+	Label string
+}
+
+type _MiddleBond struct {
+	sth1, sth2 float64
+}
+
 type _LammpsMetadata struct {
 	atomsCount     int
 	atomTypesCount int
 	bondsCount     int
 	bondTypesCount int
-	atomTypes      map[string]struct {
-		Mass  int
-		Label string
-	}
-	bondTypes map[string]struct {
-		sth1 int
-		sth2 float64
-	}
-	atoms _Atoms
-	bonds []*Bond
+	atomTypes      map[string]_MiddleAtom
+	bondTypes      map[string]_MiddleBond
+	atoms          _Atoms
+	bonds          []*Bond
 }
 
 type LammpsLoader struct {
@@ -106,19 +109,13 @@ func (loader *LammpsLoader) loadMetadata() error {
 	if err := writeMetadata(loader, &loader.atomTypesCount, "atom types"); err != nil {
 		return err
 	}
-	loader.atomTypes = make(map[string]struct {
-		Mass  int
-		Label string
-	})
+	loader.atomTypes = make(map[string]_MiddleAtom)
 
 	// read bonds section
 	if err := writeMetadata(loader, &loader.bondsCount, "bonds counts"); err != nil {
 		return err
 	}
-	loader.bondTypes = make(map[string]struct {
-		sth1 int
-		sth2 float64
-	})
+	loader.bondTypes = make(map[string]_MiddleBond)
 
 	// read bonds types section
 	if err := writeMetadata(loader, &loader.bondTypesCount, "bonds types"); err != nil {
@@ -202,10 +199,7 @@ func (loader *LammpsLoader) loadMasses() error {
 				label = "C"
 			}
 		}
-		loader.atomTypes[number] = struct {
-			Mass  int
-			Label string
-		}{
+		loader.atomTypes[number] = _MiddleAtom{
 			Mass:  mass,
 			Label: label,
 		}
@@ -233,10 +227,7 @@ func (loader *LammpsLoader) loadBondTypes() error {
 		if err != nil {
 			return err
 		}
-		loader.bondTypes[number] = struct {
-			sth1 int
-			sth2 float64
-		}{
+		loader.bondTypes[number] = _MiddleBond{
 			sth1: sth1,
 			sth2: sth2,
 		}
