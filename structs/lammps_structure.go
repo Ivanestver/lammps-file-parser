@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 type DimentionType = int
+type AtomType = Pair[int, float64]           // atomID, atomMass
+type BondType = Tuple[int, float64, float64] // bondID, sth1, sth2
 
 const (
 	DIMENTION_TYPE_X DimentionType = iota
@@ -17,15 +20,20 @@ const (
 )
 
 type LammpsStruct struct {
-	FileName string
-	Atoms    []Atom
-	Bonds    []Bond
+	FileName       string
+	Atoms          []Atom
+	AtomTypes      []AtomType
+	Bonds          []Bond
+	BondTypes      []BondType
+	SpaceDimention [3][2]float64
 }
 
-func NewLammpsStruct(atomsCount, bondsCount int) *LammpsStruct {
+func NewLammpsStruct(atomsCount, bondsCount, atomsTypesCount, bondsTypesCount int) *LammpsStruct {
 	obj := &LammpsStruct{}
 	obj.Atoms = make([]Atom, atomsCount)
+	obj.AtomTypes = make([]AtomType, atomsTypesCount)
 	obj.Bonds = make([]Bond, bondsCount)
+	obj.BondTypes = make([]BondType, bondsTypesCount)
 	return obj
 }
 
@@ -393,12 +401,58 @@ func (loader *LammpsLoader) loadBonds() error {
 }
 
 func (loader *LammpsLoader) constructLammpsStruct() error {
-	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.bonds))
+	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.bonds), len(loader.atomTypes), len(loader.bondTypes))
 	for i := range loader.atoms {
 		loader.builtGlobula.Atoms[i] = *loader.atoms[i]
+	}
+	j := 0
+	for atomTypeS := range loader.atomTypes {
+		if atomType, err := strconv.Atoi(atomTypeS); err != nil {
+			loader.builtGlobula.AtomTypes[j] = AtomType{
+				Item1: atomType,
+				Item2: loader.atomTypes[atomTypeS].Mass,
+			}
+		}
+		j++
+		slices.SortFunc(loader.builtGlobula.AtomTypes, func(t1, t2 AtomType) int {
+			if t1.Item1 < t2.Item1 {
+				return -1
+			} else if t1.Item1 == t2.Item1 {
+				return 0
+			} else {
+				return 1
+			}
+		})
 	}
 	for i := range loader.bonds {
 		loader.builtGlobula.Bonds[i] = *loader.bonds[i]
 	}
+	j = 0
+	for bondTypeS := range loader.bondTypes {
+		if bondType, err := strconv.Atoi(bondTypeS); err != nil {
+			loader.builtGlobula.BondTypes[j] = BondType{
+				Item1: bondType,
+				Item2: loader.bondTypes[bondTypeS].sth1,
+				Item3: loader.bondTypes[bondTypeS].sth2,
+			}
+		}
+		j++
+		slices.SortFunc(loader.builtGlobula.BondTypes, func(t1, t2 BondType) int {
+			if t1.Item1 < t2.Item1 {
+				return -1
+			} else if t1.Item1 == t2.Item1 {
+				return 0
+			} else {
+				return 1
+			}
+		})
+	}
+
+	for i := 0; i < len(loader.builtGlobula.SpaceDimention); i++ {
+		for k := 0; k < len(loader.builtGlobula.SpaceDimention[i]); k++ {
+			loader.builtGlobula.SpaceDimention[i][k] = loader.spaceDimention[i][k]
+		}
+	}
+
 	return nil
 }
