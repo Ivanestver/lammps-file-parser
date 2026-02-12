@@ -24,6 +24,11 @@ func NewLammpsStruct(atomsCount, bondsCount int) *LammpsStruct {
 type _Atoms []*Atom
 
 func (atoms _Atoms) setAtom(atom *Atom) {
+	atomId := atom.AtomID - 1
+	if atomId < 0 || atomId >= len(atoms) {
+		panic(fmt.Sprintf("The atom's (%f, %f, %f) Atom ID (%d) is out of bounds (max: %d)",
+			atom.X, atom.Y, atom.Z, atom.AtomID, len(atoms)))
+	}
 	atoms[atom.AtomID-1] = atom
 }
 
