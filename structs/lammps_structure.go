@@ -14,10 +14,10 @@ type LammpsStruct struct {
 	Bonds    []Bond
 }
 
-func NewLammpsStruct() *LammpsStruct {
+func NewLammpsStruct(atomsCount, bondsCount int) *LammpsStruct {
 	obj := &LammpsStruct{}
-	obj.Atoms = make([]Atom, 0)
-	obj.Bonds = make([]Bond, 0)
+	obj.Atoms = make([]Atom, atomsCount)
+	obj.Bonds = make([]Bond, bondsCount)
 	return obj
 }
 
@@ -341,12 +341,12 @@ func (loader *LammpsLoader) loadBonds() error {
 }
 
 func (loader *LammpsLoader) constructLammpsStruct() error {
-	loader.builtGlobula = NewLammpsStruct()
+	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.bonds))
 	for i := range loader.atoms {
-		loader.builtGlobula.Atoms = append(loader.builtGlobula.Atoms, *loader.atoms[i])
+		loader.builtGlobula.Atoms[i] = *loader.atoms[i]
 	}
 	for i := range loader.bonds {
-		loader.builtGlobula.Bonds = append(loader.builtGlobula.Bonds, *loader.bonds[i])
+		loader.builtGlobula.Bonds[i] = *loader.bonds[i]
 	}
 	return nil
 }
