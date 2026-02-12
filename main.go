@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Ivanestver/lammps-file-parser/parser"
+	"github.com/Ivanestver/lammps-file-parser/deserialize"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	lammpsStruct, err := parser.Parse(content, *infilePtr)
+	lammpsStruct, err := deserialize.Deserialize(content, *infilePtr)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

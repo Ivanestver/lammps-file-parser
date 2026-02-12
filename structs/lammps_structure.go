@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+type DimentionType = int
+
+const (
+	DIMENTION_TYPE_X DimentionType = iota
+	DIMENTION_TYPE_Y
+	DIMENTION_TYPE_Z
+)
+
 type LammpsStruct struct {
 	FileName string
 	Atoms    []Atom
@@ -50,6 +58,7 @@ type _LammpsMetadata struct {
 	atomTypesCount int
 	bondsCount     int
 	bondTypesCount int
+	spaceDimention [3][2]float64
 	atomTypes      map[string]_MiddleAtom
 	bondTypes      map[string]_MiddleBond
 	atoms          _Atoms
@@ -107,25 +116,30 @@ func (loader *LammpsLoader) load() error {
 
 func (loader *LammpsLoader) loadMetadata() error {
 	// read atoms section
-	if err := writeMetadata(loader, &loader.atomsCount, "atoms"); err != nil {
+	if err := readMetadata(loader, &loader.atomsCount, "atoms"); err != nil {
 		return err
 	}
 	loader.atoms = make([]*Atom, loader.atomsCount)
 
 	// read atoms types section
-	if err := writeMetadata(loader, &loader.atomTypesCount, "atom types"); err != nil {
+	if err := readMetadata(loader, &loader.atomTypesCount, "atom types"); err != nil {
 		return err
 	}
 	loader.atomTypes = make(map[string]_MiddleAtom)
 
 	// read bonds section
-	if err := writeMetadata(loader, &loader.bondsCount, "bonds"); err != nil {
+	if err := readMetadata(loader, &loader.bondsCount, "bonds"); err != nil {
 		return err
 	}
 	loader.bondTypes = make(map[string]_MiddleBond)
 
 	// read bonds types section
-	if err := writeMetadata(loader, &loader.bondTypesCount, "bond types"); err != nil {
+	if err := readMetadata(loader, &loader.bondTypesCount, "bond types"); err != nil {
+		return err
+	}
+
+	// read space dimention section
+	if err := readSpaceDimentionSection(loader); err != nil {
 		return err
 	}
 
@@ -148,9 +162,9 @@ func getNumber(s string) (int, error) {
 	return strconv.Atoi(builder.String())
 }
 
-func writeMetadata(loader *LammpsLoader, metadata *int, sectionName string) error {
+func readMetadata(loader *LammpsLoader, metadata *int, sectionName string) error {
 	scanner := bufio.NewScanner(strings.NewReader(loader.content))
-	for scanner.Scan() && !strings.Contains(scanner.Text(), sectionName) {
+	for scanner.Scan() && !strings.Contains(scannerText(scanner.Text()), sectionName) {
 	}
 
 	line := scannerText(scanner.Text())
@@ -163,6 +177,44 @@ func writeMetadata(loader *LammpsLoader, metadata *int, sectionName string) erro
 	if count, err := getNumber(line); err == nil {
 		*metadata = count
 	}
+	return nil
+}
+
+func readSpaceDimentionSection(loader *LammpsLoader) error {
+	scanner := bufio.NewScanner(strings.NewReader(loader.content))
+	for scanner.Scan() {
+		line := scannerText(scanner.Text())
+		if strings.Contains(line, "xlo") {
+			readSpaceDimention(loader, line, DIMENTION_TYPE_X)
+		} else if strings.Contains(line, "ylo") {
+			readSpaceDimention(loader, line, DIMENTION_TYPE_Y)
+		} else if strings.Contains(line, "zlo") {
+			readSpaceDimention(loader, line, DIMENTION_TYPE_Z)
+		} else {
+			continue
+		}
+	}
+	return nil
+}
+
+func readSpaceDimention(loader *LammpsLoader, line string, dimentionType DimentionType) error {
+	// Suppose that line is already purified
+	part := strings.Split(line, " ")
+	// The template is the following (in case of the X axis):
+	// lower_value higher_value 'xlo' 'xhi'
+	if len(part) != 4 {
+		return fmt.Errorf("Wrong structure in the space dimention section: %d", dimentionType)
+	}
+	lowerValue, err := strconv.ParseFloat(part[0], 64)
+	if err != nil {
+		return err
+	}
+	upperValue, err := strconv.ParseFloat(part[1], 64)
+	if err != nil {
+		return err
+	}
+	loader.spaceDimention[int(dimentionType)][0] = lowerValue
+	loader.spaceDimention[int(dimentionType)][1] = upperValue
 	return nil
 }
 
