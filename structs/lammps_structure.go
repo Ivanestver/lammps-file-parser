@@ -175,7 +175,7 @@ func (loader *LammpsLoader) loadMasses() error {
 			return fmt.Errorf("wrong line in the Masses section (line number in there: %d)", atomTypeLineNumber+1)
 		}
 		number := parts[0]
-		mass, err := strconv.Atoi(parts[1])
+		mass, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
 			return err
 		}
@@ -219,7 +219,7 @@ func (loader *LammpsLoader) loadBondTypes() error {
 			return fmt.Errorf("wrong line in the Bond Coeffs section (line number in there: %d)", bondTypeLineNumber+1)
 		}
 		number := parts[0]
-		sth1, err := strconv.Atoi(parts[1])
+		sth1, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
 			return err
 		}
