@@ -60,9 +60,21 @@ type LammpsLoader struct {
 	_LammpsMetadata
 	builtGlobula *LammpsStruct
 	scanner      *bufio.Scanner
+	content      string
+}
+
+func scannerText(scannerText string) string {
+	line := strings.TrimSpace(scannerText)
+	tmp := strings.ReplaceAll(line, "  ", " ")
+	for len(line) != len(tmp) {
+		line = tmp
+		tmp = strings.ReplaceAll(tmp, "  ", " ")
+	}
+	return line
 }
 
 func (loader *LammpsLoader) Load(content string) (*LammpsStruct, error) {
+	loader.content = content
 	loader.scanner = bufio.NewScanner(strings.NewReader(content))
 	if err := loader.load(); err != nil {
 		return nil, err
@@ -94,19 +106,9 @@ func (loader *LammpsLoader) load() error {
 }
 
 func (loader *LammpsLoader) loadMetadata() error {
-	for loader.scanner.Scan() {
-		line := loader.scanner.Text()
-		if len(line) == 0 {
-			continue
-		}
-		if line[0] < '0' || line[0] > '9' {
-			continue
-		}
-		// read atoms count section
-		if count, err := getNumber(line); err == nil {
-			loader.atomsCount = count
-			break
-		}
+	// read atoms section
+	if err := writeMetadata(loader, &loader.atomsCount, "atoms"); err != nil {
+		return err
 	}
 	loader.atoms = make([]*Atom, loader.atomsCount)
 
@@ -117,13 +119,13 @@ func (loader *LammpsLoader) loadMetadata() error {
 	loader.atomTypes = make(map[string]_MiddleAtom)
 
 	// read bonds section
-	if err := writeMetadata(loader, &loader.bondsCount, "bonds counts"); err != nil {
+	if err := writeMetadata(loader, &loader.bondsCount, "bonds"); err != nil {
 		return err
 	}
 	loader.bondTypes = make(map[string]_MiddleBond)
 
 	// read bonds types section
-	if err := writeMetadata(loader, &loader.bondTypesCount, "bonds types"); err != nil {
+	if err := writeMetadata(loader, &loader.bondTypesCount, "bond types"); err != nil {
 		return err
 	}
 
@@ -147,31 +149,33 @@ func getNumber(s string) (int, error) {
 }
 
 func writeMetadata(loader *LammpsLoader, metadata *int, sectionName string) error {
-	if loader.scanner.Scan() {
-		line := loader.scanner.Text()
-		if len(line) == 0 {
-			return errors.New("Could not find " + sectionName + " section")
-		}
-		if line[0] < '0' || line[0] > '9' {
-			return errors.New("Could not find " + sectionName + " section")
-		}
-		if count, err := getNumber(line); err == nil {
-			*metadata = count
-		}
+	scanner := bufio.NewScanner(strings.NewReader(loader.content))
+	for scanner.Scan() && !strings.Contains(scanner.Text(), sectionName) {
+	}
+
+	line := scannerText(scanner.Text())
+	if len(line) == 0 {
+		return errors.New("Could not find " + sectionName + " section")
+	}
+	if line[0] < '0' || line[0] > '9' {
+		return errors.New("Could not find " + sectionName + " section")
+	}
+	if count, err := getNumber(line); err == nil {
+		*metadata = count
 	}
 	return nil
 }
 
 func (loader *LammpsLoader) loadMasses() error {
 	for loader.scanner.Scan() {
-		if loader.scanner.Text() == "Masses" {
+		if scannerText(loader.scanner.Text()) == "Masses" {
 			break
 		}
 	}
 	loader.scanner.Scan()
 
 	for atomTypeLineNumber := 0; atomTypeLineNumber < loader.atomTypesCount && loader.scanner.Scan(); atomTypeLineNumber++ {
-		line := loader.scanner.Text()
+		line := scannerText(loader.scanner.Text())
 		if len(line) == 0 {
 			break
 		}
@@ -214,13 +218,13 @@ func (loader *LammpsLoader) loadMasses() error {
 }
 
 func (loader *LammpsLoader) loadBondTypes() error {
-	for loader.scanner.Scan() && loader.scanner.Text() != "Bond Coeffs # harmonic" {
+	for loader.scanner.Scan() && !strings.Contains(scannerText(loader.scanner.Text()), "Bond Coeffs") {
 	}
 	loader.scanner.Scan()
 
 	for bondTypeLineNumber := 0; bondTypeLineNumber < loader.bondTypesCount && loader.scanner.Scan(); bondTypeLineNumber++ {
-		parts := strings.Split(loader.scanner.Text(), " ")
-		if len(parts) != 3 {
+		parts := strings.Split(scannerText(loader.scanner.Text()), " ")
+		if len(parts) < 3 {
 			return fmt.Errorf("wrong line in the Bond Coeffs section (line number in there: %d)", bondTypeLineNumber+1)
 		}
 		number := parts[0]
@@ -242,12 +246,12 @@ func (loader *LammpsLoader) loadBondTypes() error {
 }
 
 func (loader *LammpsLoader) loadAtoms() error {
-	for loader.scanner.Scan() && loader.scanner.Text() != "Atoms # full" {
+	for loader.scanner.Scan() && !strings.Contains(scannerText(loader.scanner.Text()), "Atoms") {
 	}
 	loader.scanner.Scan()
 
 	for atomLineNumber := 0; atomLineNumber < loader.atomsCount && loader.scanner.Scan(); atomLineNumber++ {
-		parts := strings.Split(loader.scanner.Text(), " ")
+		parts := strings.Split(scannerText(loader.scanner.Text()), " ")
 		if len(parts) != 10 {
 			return fmt.Errorf("wrong line in the Atoms section (line number in there: %d)", atomLineNumber+1)
 		}
@@ -297,13 +301,13 @@ func (loader *LammpsLoader) loadAtoms() error {
 }
 
 func (loader *LammpsLoader) loadBonds() error {
-	for loader.scanner.Scan() && loader.scanner.Text() != "Bonds" {
+	for loader.scanner.Scan() && scannerText(loader.scanner.Text()) != "Bonds" {
 	}
 	loader.scanner.Scan()
 
 	loader.bonds = make([]*Bond, 0)
 	for bondLineNumber := 0; bondLineNumber < loader.bondsCount && loader.scanner.Scan(); bondLineNumber++ {
-		parts := strings.Split(loader.scanner.Text(), " ")
+		parts := strings.Split(scannerText(loader.scanner.Text()), " ")
 		if len(parts) != 4 {
 			return fmt.Errorf("wrong line in the Bonds section (line number in there: %d)", bondLineNumber+1)
 		}
