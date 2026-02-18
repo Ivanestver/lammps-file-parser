@@ -3,10 +3,10 @@ package structs
 type Bond struct {
 	BondID         int
 	ConnectionType int
-	Ends           [2]*Atom
+	Ends           [2]int
 }
 
-func NewBond(bondId, connectionType int, ends [2]*Atom) *Bond {
+func NewBond(bondId, connectionType int, ends [2]int) *Bond {
 	return &Bond{
 		BondID:         bondId,
 		ConnectionType: connectionType,
@@ -25,6 +25,6 @@ func (bond *Bond) Equals(other *Bond) bool {
 }
 
 func (bond *Bond) equalEnds(other *Bond) bool {
-	return (bond.Ends[0].Equals(other.Ends[0]) && bond.Ends[1].Equals(other.Ends[1])) ||
-		(bond.Ends[0].Equals(other.Ends[1]) && bond.Ends[1].Equals(other.Ends[0]))
+	return (bond.Ends[0] == other.Ends[0] && bond.Ends[1] == other.Ends[1]) ||
+		(bond.Ends[0] == other.Ends[1] && bond.Ends[1] == other.Ends[0])
 }

@@ -391,10 +391,7 @@ func (loader *LammpsLoader) loadBonds() error {
 			return err
 		}
 
-		firstAtom := loader.atoms.getAtom(int(firstAtomID))
-		secondAtom := loader.atoms.getAtom(int(secondAtomID))
-
-		bond := NewBond(bondID, connectionType, [2]*Atom{firstAtom, secondAtom})
+		bond := NewBond(bondID, connectionType, [2]int{int(firstAtomID), int(secondAtomID)})
 		loader.bonds = append(loader.bonds, bond)
 	}
 	return nil
