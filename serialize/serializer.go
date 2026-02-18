@@ -122,13 +122,14 @@ func (serializer *_Serializer) serializeSpaceMeasures() error {
 }
 
 func (serializer *_Serializer) serializeSpaceMeasure(lower, higher float64, axis rune) error {
-	_, err := serializer.writeLinef("%d %d %slo %shi", lower, higher, axis, axis)
+	_, err := serializer.writeLinef("%f %f %slo %shi", lower, higher, string(axis), string(axis))
 	return err
 }
 
 // ================== Masses ==================
 
 func (serializer *_Serializer) serializeMasses() error {
+	serializer.writeLine("Masses\n")
 	for _, atomType := range serializer.lammpsStruct.AtomTypes {
 		if _, err := serializer.writeLinef("%d %f", atomType.Item1, atomType.Item2); err != nil {
 			return err
@@ -140,6 +141,7 @@ func (serializer *_Serializer) serializeMasses() error {
 // ================== Bond coeffs ==================
 
 func (serializer *_Serializer) serializeBondCoeffs() error {
+	serializer.writeLine("Bond Coeffs\n")
 	for _, bondType := range serializer.lammpsStruct.BondTypes {
 		if _, err := serializer.writeLinef("%d %f %f", bondType.Item1, bondType.Item2, bondType.Item3); err != nil {
 			return err
@@ -149,6 +151,7 @@ func (serializer *_Serializer) serializeBondCoeffs() error {
 }
 
 func (serializer *_Serializer) serializeAtoms() error {
+	serializer.writeLine("Atoms\n")
 	for _, atom := range serializer.lammpsStruct.Atoms {
 		if _, err := serializer.writeLinef("%d %d %d %f %f %f %f 0 0 0",
 			atom.AtomID, atom.MoleculeID, atom.AtomType, atom.Q,
@@ -161,8 +164,9 @@ func (serializer *_Serializer) serializeAtoms() error {
 }
 
 func (serializer *_Serializer) serializeBonds() error {
+	serializer.writeLine("Bonds\n")
 	for _, bond := range serializer.lammpsStruct.Bonds {
-		if _, err := serializer.writeLinef("%d, %d, %d, %d",
+		if _, err := serializer.writeLinef("%d %d %d %d",
 			bond.BondID, bond.ConnectionType, bond.Ends[0], bond.Ends[1],
 		); err != nil {
 			return err
