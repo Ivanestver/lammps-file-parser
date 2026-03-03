@@ -131,7 +131,7 @@ func (serializer *_Serializer) serializeSpaceMeasure(lower, higher float64, axis
 func (serializer *_Serializer) serializeMasses() error {
 	serializer.writeLine("Masses\n")
 	for _, atomType := range serializer.lammpsStruct.AtomTypes {
-		if _, err := serializer.writeLinef("%d %f", atomType.Item1, atomType.Item2); err != nil {
+		if _, err := serializer.writeLinef("%d %f # %s", atomType.AtomType, atomType.AtomMass, atomType.AtomLabel); err != nil {
 			return err
 		}
 	}
@@ -143,7 +143,7 @@ func (serializer *_Serializer) serializeMasses() error {
 func (serializer *_Serializer) serializeBondCoeffs() error {
 	serializer.writeLine("Bond Coeffs\n")
 	for _, bondType := range serializer.lammpsStruct.BondTypes {
-		if _, err := serializer.writeLinef("%d %f %f", bondType.Item1, bondType.Item2, bondType.Item3); err != nil {
+		if _, err := serializer.writeLinef("%d %f %f", bondType.BondID, bondType.Sth1, bondType.Sth2); err != nil {
 			return err
 		}
 	}
