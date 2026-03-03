@@ -10,8 +10,21 @@ import (
 )
 
 type DimentionType = int
-type AtomType = Pair[int, float64]           // atomID, atomMass
-type BondType = Tuple[int, float64, float64] // bondID, sth1, sth2
+
+// type AtomType = Pair[int, float64]           // atomID, atomMass
+//type BondType = Tuple[int, float64, float64] // bondID, sth1, sth2
+
+type AtomType struct {
+	AtomType  int
+	AtomMass  float64
+	AtomLabel string
+}
+
+type BondType struct {
+	BondID int
+	Sth1   float64
+	Sth2   float64
+}
 
 const (
 	DIMENTION_TYPE_X DimentionType = iota
@@ -46,10 +59,6 @@ func (atoms _Atoms) setAtom(atom *Atom) {
 			atom.X, atom.Y, atom.Z, atom.AtomID, len(atoms)))
 	}
 	atoms[atom.AtomID-1] = atom
-}
-
-func (atoms _Atoms) getAtom(atomID int) *Atom {
-	return atoms[atomID-1]
 }
 
 type _MiddleAtom struct {
@@ -368,7 +377,7 @@ func (loader *LammpsLoader) loadBonds() error {
 	loader.bonds = make([]*Bond, 0)
 	for bondLineNumber := 0; bondLineNumber < loader.bondsCount && loader.scanner.Scan(); bondLineNumber++ {
 		parts := strings.Split(scannerText(loader.scanner.Text()), " ")
-		if len(parts) != 4 {
+		if len(parts) < 4 {
 			return fmt.Errorf("wrong line in the Bonds section (line number in there: %d)", bondLineNumber+1)
 		}
 		bondID, err := strconv.Atoi(parts[0])
@@ -404,23 +413,25 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 	}
 	j := 0
 	for atomTypeS := range loader.atomTypes {
-		if atomType, err := strconv.Atoi(atomTypeS); err != nil {
+		if atomType, err := strconv.Atoi(atomTypeS); err == nil {
 			loader.builtGlobula.AtomTypes[j] = AtomType{
-				Item1: atomType,
-				Item2: loader.atomTypes[atomTypeS].Mass,
+				AtomType:  atomType,
+				AtomMass:  loader.atomTypes[atomTypeS].Mass,
+				AtomLabel: loader.atomTypes[atomTypeS].Label,
 			}
 		}
 		j++
-		slices.SortFunc(loader.builtGlobula.AtomTypes, func(t1, t2 AtomType) int {
-			if t1.Item1 < t2.Item1 {
-				return -1
-			} else if t1.Item1 == t2.Item1 {
-				return 0
-			} else {
-				return 1
-			}
-		})
 	}
+
+	slices.SortFunc(loader.builtGlobula.AtomTypes, func(t1, t2 AtomType) int {
+		if t1.AtomType < t2.AtomType {
+			return -1
+		} else if t1.AtomType == t2.AtomType {
+			return 0
+		} else {
+			return 1
+		}
+	})
 	for i := range loader.bonds {
 		loader.builtGlobula.Bonds[i] = *loader.bonds[i]
 	}
@@ -428,22 +439,22 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 	for bondTypeS := range loader.bondTypes {
 		if bondType, err := strconv.Atoi(bondTypeS); err != nil {
 			loader.builtGlobula.BondTypes[j] = BondType{
-				Item1: bondType,
-				Item2: loader.bondTypes[bondTypeS].sth1,
-				Item3: loader.bondTypes[bondTypeS].sth2,
+				BondID: bondType,
+				Sth1:   loader.bondTypes[bondTypeS].sth1,
+				Sth2:   loader.bondTypes[bondTypeS].sth2,
 			}
 		}
 		j++
-		slices.SortFunc(loader.builtGlobula.BondTypes, func(t1, t2 BondType) int {
-			if t1.Item1 < t2.Item1 {
-				return -1
-			} else if t1.Item1 == t2.Item1 {
-				return 0
-			} else {
-				return 1
-			}
-		})
 	}
+	slices.SortFunc(loader.builtGlobula.BondTypes, func(t1, t2 BondType) int {
+		if t1.BondID < t2.BondID {
+			return -1
+		} else if t1.BondID == t2.BondID {
+			return 0
+		} else {
+			return 1
+		}
+	})
 
 	for i := 0; i < len(loader.builtGlobula.SpaceDimention); i++ {
 		for k := 0; k < len(loader.builtGlobula.SpaceDimention[i]); k++ {
