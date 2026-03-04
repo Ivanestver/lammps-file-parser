@@ -257,25 +257,11 @@ func (loader *LammpsLoader) loadMasses() error {
 		if err != nil {
 			return err
 		}
-		literals := make(map[int]string)
-		literals[1] = "O"
-		literals[2] = "N"
-		literals[3] = "C"
-		literals[4] = "S"
 		var label string
-		if len(parts) > 2 {
+		if len(parts) == 4 {
 			label = parts[3]
 		} else {
-			for t, l := range literals {
-				n, _ := strconv.Atoi(number)
-				if int(t) == n {
-					label = l
-					break
-				}
-			}
-			if len(label) == 0 {
-				label = "C"
-			}
+			return errors.New("Отсутсвуют названия элементов в Masses")
 		}
 		loader.atomTypes[number] = _MiddleAtom{
 			Mass:  mass,
