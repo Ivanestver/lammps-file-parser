@@ -62,7 +62,7 @@ func (serializer *_Serializer) serializeMetadata() error {
 	if err := serializer.serializeHeader(); err != nil {
 		return err
 	}
-	serializer.writeString("")
+	serializer.writeLine("")
 	if err := serializer.serializeAtomsCount(); err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (serializer *_Serializer) serializeMetadata() error {
 
 // ================== Metadata ==================
 func (serializer *_Serializer) serializeHeader() error {
-	_, err := serializer.writeLine("LAMMPS data file via write_data, version 24 Dec 2020, timestep = 40000000")
+	_, err := serializer.writeLine("LAMMPS data file via write_data")
 	return err
 }
 
@@ -151,7 +151,7 @@ func (serializer *_Serializer) serializeBondCoeffs() error {
 }
 
 func (serializer *_Serializer) serializeAtoms() error {
-	serializer.writeLine("Atoms\n")
+	serializer.writeLine("Atoms # full\n")
 	for _, atom := range serializer.lammpsStruct.Atoms {
 		if _, err := serializer.writeLinef("%d %d %d %f %f %f %f 0 0 0",
 			atom.AtomID, atom.MoleculeID, atom.AtomType, atom.Q,
