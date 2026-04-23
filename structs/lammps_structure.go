@@ -307,7 +307,7 @@ func (loader *LammpsLoader) loadAtoms() error {
 
 	for atomLineNumber := 0; atomLineNumber < loader.atomsCount && loader.scanner.Scan(); atomLineNumber++ {
 		parts := strings.Split(scannerText(loader.scanner.Text()), " ")
-		if len(parts) != 10 {
+		if len(parts) < 7 {
 			return fmt.Errorf("wrong line in the Atoms section (line number in there: %d)", atomLineNumber+1)
 		}
 
