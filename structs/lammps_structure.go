@@ -113,17 +113,27 @@ func (loader *LammpsLoader) load() error {
 	if err := loader.loadMetadata(); err != nil {
 		return err
 	}
-	if err := loader.loadMasses(); err != nil {
-		return err
-	}
-	if err := loader.loadBondTypes(); err != nil {
-		return err
-	}
-	if err := loader.loadAtoms(); err != nil {
-		return err
-	}
-	if err := loader.loadBonds(); err != nil {
-		return err
+	for loader.scanner.Scan() {
+		txt := scannerText(loader.scanner.Text())
+		if strings.Contains(txt, "Masses") {
+			if err := loader.loadMasses(); err != nil {
+				return err
+			}
+		} else if strings.Contains(txt, "Bond Coeffs") {
+			if err := loader.loadBondTypes(); err != nil {
+				return err
+			}
+		} else if strings.Contains(txt, "Atoms") {
+			if err := loader.loadAtoms(); err != nil {
+				return err
+			}
+		} else if strings.Contains(txt, "Bonds") {
+			if err := loader.loadBonds(); err != nil {
+				return err
+			}
+		} else {
+			continue
+		}
 	}
 	if err := loader.constructLammpsStruct(); err != nil {
 		return err
@@ -236,11 +246,6 @@ func readSpaceDimention(loader *LammpsLoader, line string, dimentionType Dimenti
 }
 
 func (loader *LammpsLoader) loadMasses() error {
-	for loader.scanner.Scan() {
-		if scannerText(loader.scanner.Text()) == "Masses" {
-			break
-		}
-	}
 	loader.scanner.Scan()
 
 	for atomTypeLineNumber := 0; atomTypeLineNumber < loader.atomTypesCount && loader.scanner.Scan(); atomTypeLineNumber++ {
@@ -261,7 +266,7 @@ func (loader *LammpsLoader) loadMasses() error {
 		if len(parts) == 4 {
 			label = parts[3]
 		} else {
-			return errors.New("Отсутсвуют названия элементов в Masses")
+			return errors.New("отсутсвуют названия элементов в Masses")
 		}
 		loader.atomTypes[number] = _MiddleAtom{
 			Mass:  mass,
@@ -273,8 +278,6 @@ func (loader *LammpsLoader) loadMasses() error {
 }
 
 func (loader *LammpsLoader) loadBondTypes() error {
-	for loader.scanner.Scan() && !strings.Contains(scannerText(loader.scanner.Text()), "Bond Coeffs") {
-	}
 	loader.scanner.Scan()
 
 	for bondTypeLineNumber := 0; bondTypeLineNumber < loader.bondTypesCount && loader.scanner.Scan(); bondTypeLineNumber++ {
@@ -301,8 +304,6 @@ func (loader *LammpsLoader) loadBondTypes() error {
 }
 
 func (loader *LammpsLoader) loadAtoms() error {
-	for loader.scanner.Scan() && !strings.Contains(scannerText(loader.scanner.Text()), "Atoms") {
-	}
 	loader.scanner.Scan()
 
 	for atomLineNumber := 0; atomLineNumber < loader.atomsCount && loader.scanner.Scan(); atomLineNumber++ {
@@ -356,8 +357,6 @@ func (loader *LammpsLoader) loadAtoms() error {
 }
 
 func (loader *LammpsLoader) loadBonds() error {
-	for loader.scanner.Scan() && scannerText(loader.scanner.Text()) != "Bonds" {
-	}
 	loader.scanner.Scan()
 
 	loader.bonds = make([]*Bond, 0)
