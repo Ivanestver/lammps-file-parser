@@ -231,7 +231,7 @@ func readSpaceDimention(loader *LammpsLoader, line string, dimentionType Dimenti
 	// The template is the following (in case of the X axis):
 	// lower_value higher_value 'xlo' 'xhi'
 	if len(part) != 4 {
-		return fmt.Errorf("Wrong structure in the space dimention section: %d", dimentionType)
+		return fmt.Errorf("wrong structure in the space dimention section: %d", dimentionType)
 	}
 	lowerValue, err := strconv.ParseFloat(part[0], 64)
 	if err != nil {

@@ -6,9 +6,9 @@ type Bond struct {
 	Ends           [2]int
 }
 
-func NewBond(bondId, connectionType int, ends [2]int) *Bond {
+func NewBond(bondID, connectionType int, ends [2]int) *Bond {
 	return &Bond{
-		BondID:         bondId,
+		BondID:         bondID,
 		ConnectionType: connectionType,
 		Ends:           ends,
 	}

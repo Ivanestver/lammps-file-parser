@@ -17,11 +17,11 @@ type Atom struct {
 	AtomCoords
 }
 
-func NewAtom(label string, atomId, moleculeId, atomType int, q, x, y, z float64) *Atom {
+func NewAtom(label string, atomID, moleculeID, atomType int, q, x, y, z float64) *Atom {
 	return &Atom{
 		Label:      label,
-		AtomID:     atomId,
-		MoleculeID: moleculeId,
+		AtomID:     atomID,
+		MoleculeID: moleculeID,
 		AtomType:   atomType,
 		Q:          q,
 		AtomCoords: AtomCoords{

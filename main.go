@@ -33,21 +33,21 @@ func main() {
 		return
 	}
 
-	parsedJson, err := json.Marshal(lammpsStruct)
+	parsedJSON, err := json.Marshal(lammpsStruct)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	if err = writeJson(parsedJson, *outfilePtr); err == nil {
+	if err = writeJSON(parsedJSON, *outfilePtr); err == nil {
 		fmt.Println("Done!")
 	} else {
 		fmt.Println(err.Error())
 	}
 }
 
-func writeJson(parsedJson []byte, outfile string) error {
-	return os.WriteFile(outfile, parsedJson, os.ModePerm)
+func writeJSON(parsedJSON []byte, outfile string) error {
+	return os.WriteFile(outfile, parsedJSON, os.ModePerm)
 }
 
 func getFileContent(filename string) (string, error) {
