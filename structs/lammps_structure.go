@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -327,17 +328,17 @@ func (loader *LammpsLoader) loadAtoms() error {
 
 		// Miss the charge because of not needing it
 
-		x, err := strconv.ParseFloat(parts[4], 64)
+		x, err := strconv.ParseFloat(clearNumber(parts[4]), 64)
 		if err != nil {
 			return err
 		}
 
-		y, err := strconv.ParseFloat(parts[5], 64)
+		y, err := strconv.ParseFloat(clearNumber(parts[5]), 64)
 		if err != nil {
 			return err
 		}
 
-		z, err := strconv.ParseFloat(parts[6], 64)
+		z, err := strconv.ParseFloat(clearNumber(parts[6]), 64)
 		if err != nil {
 			return err
 		}
@@ -448,4 +449,13 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 	}
 
 	return nil
+}
+
+func clearNumber(num string) string {
+	pattern := `[-]?\d{1,2}(\.\d*)*`
+	expr, err := regexp.Compile(pattern)
+	if err != nil {
+		return ""
+	}
+	return expr.FindString(num)
 }
