@@ -28,9 +28,9 @@ type BondType struct {
 }
 
 const (
-	DIMENTION_TYPE_X DimentionType = iota
-	DIMENTION_TYPE_Y
-	DIMENTION_TYPE_Z
+	DimentionTypeX DimentionType = iota
+	DimentionTypeY
+	DimentionTypeZ
 )
 
 type LammpsStruct struct {
@@ -54,8 +54,8 @@ func NewLammpsStruct(atomsCount, bondsCount, atomsTypesCount, bondsTypesCount in
 type _Atoms []*Atom
 
 func (atoms _Atoms) setAtom(atom *Atom) {
-	atomId := atom.AtomID - 1
-	if atomId < 0 || atomId >= len(atoms) {
+	atomID := atom.AtomID - 1
+	if atomID < 0 || atomID >= len(atoms) {
 		panic(fmt.Sprintf("The atom's (%f, %f, %f) Atom ID (%d) is out of bounds (max: %d)",
 			atom.X, atom.Y, atom.Z, atom.AtomID, len(atoms)))
 	}
@@ -213,11 +213,11 @@ func readSpaceDimentionSection(loader *LammpsLoader) error {
 	for scanner.Scan() {
 		line := scannerText(scanner.Text())
 		if strings.Contains(line, "xlo") {
-			readSpaceDimention(loader, line, DIMENTION_TYPE_X)
+			readSpaceDimention(loader, line, DimentionTypeX)
 		} else if strings.Contains(line, "ylo") {
-			readSpaceDimention(loader, line, DIMENTION_TYPE_Y)
+			readSpaceDimention(loader, line, DimentionTypeY)
 		} else if strings.Contains(line, "zlo") {
-			readSpaceDimention(loader, line, DIMENTION_TYPE_Z)
+			readSpaceDimention(loader, line, DimentionTypeZ)
 		} else {
 			continue
 		}
