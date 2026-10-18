@@ -571,7 +571,7 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 }
 
 func clearNumber(num string) string {
-	pattern := `[-]?\d{1,2}(\.\d*)*(e\+\d{1,2})*`
+	pattern := `[-]?\d{1,2}(\.\d*)*(e(\+|\-)\d{1,2})*`
 	expr, err := regexp.Compile(pattern)
 	if err != nil {
 		return ""
