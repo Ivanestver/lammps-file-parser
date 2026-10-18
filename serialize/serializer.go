@@ -46,6 +46,10 @@ func (serializer *_Serializer) Serialize() (string, error) {
 		return "", err
 	}
 	serializer.writeLine("")
+	if err := serializer.serializePairIJCoeffs(); err != nil {
+		return "", err
+	}
+	serializer.writeLine("")
 	if err := serializer.serializeBondCoeffs(); err != nil {
 		return "", err
 	}
@@ -143,6 +147,21 @@ func (serializer *_Serializer) serializeMasses() error {
 			atomType.AtomType,
 			strconv.FormatFloat(atomType.AtomMass, 'f', -1, 64),
 			atomType.AtomLabel); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ================== PairIJ coeffs ==================
+
+func (serializer *_Serializer) serializePairIJCoeffs() error {
+	if len(serializer.lammpsStruct.PairIJCoeffs) == 0 {
+		return nil
+	}
+	serializer.writeLinef("PairIJ Coeffs # %s\n", serializer.lammpsStruct.PairIJCoeffs[0].GetType())
+	for _, pairij := range serializer.lammpsStruct.PairIJCoeffs {
+		if _, err := serializer.writeLine(pairij.ToString()); err != nil {
 			return err
 		}
 	}
