@@ -1,6 +1,7 @@
 package serialize
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -132,6 +133,9 @@ func (serializer *_Serializer) serializeSpaceMeasure(lower, higher float64, axis
 // ================== Masses ==================
 
 func (serializer *_Serializer) serializeMasses() error {
+	if len(serializer.lammpsStruct.BondTypes) == 0 {
+		return errors.New("секция Masses не может быть пустой")
+	}
 	serializer.writeLine("Masses\n")
 	for _, atomType := range serializer.lammpsStruct.AtomTypes {
 		if _, err := serializer.writeLinef("%d %f # %s", atomType.AtomType, atomType.AtomMass, atomType.AtomLabel); err != nil {
@@ -144,7 +148,10 @@ func (serializer *_Serializer) serializeMasses() error {
 // ================== Bond coeffs ==================
 
 func (serializer *_Serializer) serializeBondCoeffs() error {
-	serializer.writeLine("Bond Coeffs\n")
+	if len(serializer.lammpsStruct.BondTypes) == 0 {
+		return errors.New("секция Bond Coeffs не может быть пустой")
+	}
+	serializer.writeLine("Bond Coeffs # harmonic\n")
 	for _, bondType := range serializer.lammpsStruct.BondTypes {
 		if _, err := serializer.writeLinef("%d %f %f", bondType.BondID, bondType.Sth1, bondType.Sth2); err != nil {
 			return err
@@ -154,6 +161,9 @@ func (serializer *_Serializer) serializeBondCoeffs() error {
 }
 
 func (serializer *_Serializer) serializeAtoms() error {
+	if len(serializer.lammpsStruct.Atoms) == 0 {
+		return errors.New("секция Atoms не может быть пустой")
+	}
 	serializer.writeLine("Atoms # full\n")
 	for _, atom := range serializer.lammpsStruct.Atoms {
 		if _, err := serializer.writeLinef("%d %d %d %s %s %s %s %d %d %d",
@@ -168,6 +178,9 @@ func (serializer *_Serializer) serializeAtoms() error {
 }
 
 func (serializer *_Serializer) serializeBonds() error {
+	if len(serializer.lammpsStruct.Bonds) == 0 {
+		return nil
+	}
 	serializer.writeLine("Bonds\n")
 	for _, bond := range serializer.lammpsStruct.Bonds {
 		if _, err := serializer.writeLinef("%d %d %d %d",
