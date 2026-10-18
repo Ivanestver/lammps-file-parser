@@ -36,15 +36,17 @@ const (
 type LammpsStruct struct {
 	FileName       string
 	Atoms          []Atom
+	PairIJCoeffs   []IPairIJ
 	AtomTypes      []AtomType
 	Bonds          []Bond
 	BondTypes      []BondType
 	SpaceDimention [3][2]float64
 }
 
-func NewLammpsStruct(atomsCount, bondsCount, atomsTypesCount, bondsTypesCount int) *LammpsStruct {
+func NewLammpsStruct(atomsCount, pairIJCoeffsCount, bondsCount, atomsTypesCount, bondsTypesCount int) *LammpsStruct {
 	obj := &LammpsStruct{}
 	obj.Atoms = make([]Atom, atomsCount)
+	obj.PairIJCoeffs = make([]IPairIJ, pairIJCoeffsCount)
 	obj.AtomTypes = make([]AtomType, atomsTypesCount)
 	obj.Bonds = make([]Bond, bondsCount)
 	obj.BondTypes = make([]BondType, bondsTypesCount)
@@ -442,10 +444,16 @@ func (loader *LammpsLoader) loadBonds() error {
 }
 
 func (loader *LammpsLoader) constructLammpsStruct() error {
-	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.bonds), len(loader.atomTypes), len(loader.bondTypes))
+	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.pairIJCoeffs), len(loader.bonds), len(loader.atomTypes), len(loader.bondTypes))
 	for i := range loader.atoms {
 		loader.builtGlobula.Atoms[i] = *loader.atoms[i]
 	}
+
+	loader.builtGlobula.PairIJCoeffs = loader.pairIJCoeffs
+	slices.SortFunc(loader.builtGlobula.PairIJCoeffs, func(left, right IPairIJ) int {
+		return left.Compare(right)
+	})
+
 	j := 0
 	for atomTypeS := range loader.atomTypes {
 		if atomType, err := strconv.Atoi(atomTypeS); err == nil {
