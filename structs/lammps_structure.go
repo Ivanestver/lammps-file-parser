@@ -287,12 +287,11 @@ func (loader *LammpsLoader) loadMasses() error {
 
 func (loader *LammpsLoader) loadPairIJCoeffs() error {
 	header := loader.scanner.Text()
-	pairIJType := ""
 	headerParts := strings.Split(header, "#")
 	if len(headerParts) < 2 {
 		return errors.New("задайте тип PairIJ")
 	}
-	pairIJFactory := NewPairIJFactory(pairIJType)
+	pairIJFactory := NewPairIJFactory(headerParts[1])
 	loader.scanner.Scan()
 	for loader.scanner.Scan() {
 		line := loader.scanner.Text()
