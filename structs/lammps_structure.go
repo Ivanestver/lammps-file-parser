@@ -444,12 +444,14 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 	}
 	j = 0
 	for bondTypeS := range loader.bondTypes {
-		if bondType, err := strconv.Atoi(bondTypeS); err != nil {
+		if bondType, err := strconv.Atoi(bondTypeS); err == nil {
 			loader.builtGlobula.BondTypes[j] = BondType{
 				BondID: bondType,
 				Sth1:   loader.bondTypes[bondTypeS].sth1,
 				Sth2:   loader.bondTypes[bondTypeS].sth2,
 			}
+		} else {
+			return err
 		}
 		j++
 	}
