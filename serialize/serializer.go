@@ -138,7 +138,11 @@ func (serializer *_Serializer) serializeMasses() error {
 	}
 	serializer.writeLine("Masses\n")
 	for _, atomType := range serializer.lammpsStruct.AtomTypes {
-		if _, err := serializer.writeLinef("%d %f # %s", atomType.AtomType, atomType.AtomMass, atomType.AtomLabel); err != nil {
+		if _, err := serializer.writeLinef(
+			"%d %s # %s",
+			atomType.AtomType,
+			strconv.FormatFloat(atomType.AtomMass, 'f', -1, 64),
+			atomType.AtomLabel); err != nil {
 			return err
 		}
 	}
@@ -153,7 +157,11 @@ func (serializer *_Serializer) serializeBondCoeffs() error {
 	}
 	serializer.writeLine("Bond Coeffs # harmonic\n")
 	for _, bondType := range serializer.lammpsStruct.BondTypes {
-		if _, err := serializer.writeLinef("%d %f %f", bondType.BondID, bondType.Sth1, bondType.Sth2); err != nil {
+		if _, err := serializer.writeLinef("%d %s %s",
+			bondType.BondID,
+			strconv.FormatFloat(bondType.Sth1, 'f', -1, 64),
+			strconv.FormatFloat(bondType.Sth2, 'f', -1, 64),
+		); err != nil {
 			return err
 		}
 	}
