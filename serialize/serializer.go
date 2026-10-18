@@ -123,7 +123,9 @@ func (serializer *_Serializer) serializeSpaceMeasures() error {
 }
 
 func (serializer *_Serializer) serializeSpaceMeasure(lower, higher float64, axis rune) error {
-	_, err := serializer.writeLinef("%f %f %slo %shi", lower, higher, string(axis), string(axis))
+	_, err := serializer.writeLinef("%s %s %slo %shi",
+		strconv.FormatFloat(lower, 'e', 16, 64), strconv.FormatFloat(higher, 'e', 16, 64),
+		string(axis), string(axis))
 	return err
 }
 
@@ -155,8 +157,8 @@ func (serializer *_Serializer) serializeAtoms() error {
 	serializer.writeLine("Atoms # full\n")
 	for _, atom := range serializer.lammpsStruct.Atoms {
 		if _, err := serializer.writeLinef("%d %d %d %s %s %s %s %d %d %d",
-			atom.AtomID, atom.MoleculeID, atom.AtomType, strconv.FormatFloat(atom.Q, 'E', -1, 64),
-			strconv.FormatFloat(atom.X, 'E', -1, 64), strconv.FormatFloat(atom.Y, 'E', -1, 64), strconv.FormatFloat(atom.Z, 'E', -1, 64),
+			atom.AtomID, atom.MoleculeID, atom.AtomType, strconv.FormatFloat(atom.Q, 'e', 16, 64),
+			strconv.FormatFloat(atom.X, 'e', 16, 64), strconv.FormatFloat(atom.Y, 'e', 16, 64), strconv.FormatFloat(atom.Z, 'e', 16, 64),
 			atom.NX, atom.NY, atom.NZ,
 		); err != nil {
 			return err
