@@ -1,6 +1,7 @@
 package structs
 
 type AtomCoords struct{ X, Y, Z float64 }
+type PeriodicImageFlags struct{ NX, NY, NZ int }
 
 func (crds *AtomCoords) equals(others *AtomCoords) bool {
 	return crds.X == others.X &&
@@ -15,9 +16,10 @@ type Atom struct {
 	AtomType   int
 	Q          float64
 	AtomCoords
+	PeriodicImageFlags
 }
 
-func NewAtom(label string, atomID, moleculeID, atomType int, q, x, y, z float64) *Atom {
+func NewAtom(label string, atomID, moleculeID, atomType int, q, x, y, z float64, nx, ny, nz int) *Atom {
 	return &Atom{
 		Label:      label,
 		AtomID:     atomID,
@@ -28,6 +30,11 @@ func NewAtom(label string, atomID, moleculeID, atomType int, q, x, y, z float64)
 			X: x,
 			Y: y,
 			Z: z,
+		},
+		PeriodicImageFlags: PeriodicImageFlags{
+			NX: nx,
+			NY: ny,
+			NZ: nz,
 		},
 	}
 }

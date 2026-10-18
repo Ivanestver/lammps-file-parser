@@ -326,7 +326,10 @@ func (loader *LammpsLoader) loadAtoms() error {
 		atomTypeNumber := parts[2]
 		atomType, _ := strconv.Atoi(atomTypeNumber)
 
-		// Miss the charge because of not needing it
+		Q, err := strconv.ParseFloat(clearNumber(parts[3]), 64)
+		if err != nil {
+			return err
+		}
 
 		x, err := strconv.ParseFloat(clearNumber(parts[4]), 64)
 		if err != nil {
@@ -343,14 +346,32 @@ func (loader *LammpsLoader) loadAtoms() error {
 			return err
 		}
 
+		nx, err := strconv.Atoi(parts[7])
+		if err != nil {
+			return err
+		}
+
+		ny, err := strconv.Atoi(parts[8])
+		if err != nil {
+			return err
+		}
+
+		nz, err := strconv.Atoi(parts[9])
+		if err != nil {
+			return err
+		}
+
 		atom := NewAtom(loader.atomTypes[atomTypeNumber].Label,
 			int(atomID),
 			polymerID,
 			atomType,
-			0.0,
+			Q,
 			x,
 			y,
-			z)
+			z,
+			nx,
+			ny,
+			nz)
 
 		loader.atoms.setAtom(atom)
 	}
