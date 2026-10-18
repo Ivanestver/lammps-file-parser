@@ -20,6 +20,8 @@ func NewPairIJFactory(pairIJType string) IPairIJFactory {
 
 type IPairIJ interface {
 	ToString() string
+	Compare(other IPairIJ) int
+	GetType() string
 }
 
 type PairIJDPDFactory struct {
@@ -86,4 +88,50 @@ func (pair *PairIJDPD) ToString() string {
 			strconv.FormatFloat(pair.Aij, 'f', -1, 64),
 			strconv.FormatFloat(pair.Gammaij, 'f', -1, 64))
 	}
+}
+
+func (pair *PairIJDPD) Compare(other IPairIJ) int {
+	otherPair, ok := other.(*PairIJDPD)
+	if !ok {
+		return -1
+	}
+	if pair.I < otherPair.I {
+		return -1
+	} else if pair.I > otherPair.I {
+		return 1
+	} else {
+		if pair.J < otherPair.J {
+			return -1
+		} else if pair.J > otherPair.J {
+			return 1
+		} else {
+			if pair.Aij < otherPair.Aij {
+				return -1
+			} else if pair.Aij > otherPair.Aij {
+				return 1
+			} else {
+				if pair.Gammaij < otherPair.Gammaij {
+					return -1
+				} else if pair.Gammaij > otherPair.Gammaij {
+					return 1
+				} else {
+					if pair.CutoffExists && otherPair.CutoffExists {
+						if pair.Cutoff < otherPair.Cutoff {
+							return -1
+						} else if pair.Cutoff > otherPair.Cutoff {
+							return 1
+						} else {
+							return 0
+						}
+					} else {
+						return 0
+					}
+				}
+			}
+		}
+	}
+}
+
+func (pair *PairIJDPD) GetType() string {
+	return "dpd"
 }
