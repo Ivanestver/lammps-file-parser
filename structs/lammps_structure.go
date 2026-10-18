@@ -81,6 +81,7 @@ type _LammpsMetadata struct {
 	bondTypes      map[string]_MiddleBond
 	atoms          _Atoms
 	bonds          []*Bond
+	pairIJCoeffs   []IPairIJ
 }
 
 type LammpsLoader struct {
@@ -118,6 +119,10 @@ func (loader *LammpsLoader) load() error {
 		txt := scannerText(loader.scanner.Text())
 		if strings.Contains(txt, "Masses") {
 			if err := loader.loadMasses(); err != nil {
+				return err
+			}
+		} else if strings.Contains(txt, "PairIJ Coeffs") {
+			if err := loader.loadPairIJCoeffs(); err != nil {
 				return err
 			}
 		} else if strings.Contains(txt, "Bond Coeffs") {
@@ -275,6 +280,29 @@ func (loader *LammpsLoader) loadMasses() error {
 		}
 	}
 
+	return nil
+}
+
+func (loader *LammpsLoader) loadPairIJCoeffs() error {
+	header := loader.scanner.Text()
+	pairIJType := ""
+	headerParts := strings.Split(header, "#")
+	if len(headerParts) < 2 {
+		return errors.New("задайте тип PairIJ")
+	}
+	pairIJFactory := NewPairIJFactory(pairIJType)
+	loader.scanner.Scan()
+	for loader.scanner.Scan() {
+		line := loader.scanner.Text()
+		if len(line) == 0 { // The section has ended
+			return nil
+		}
+		if pairIJ, err := pairIJFactory.CreateFromLine(line); err == nil {
+			loader.pairIJCoeffs = append(loader.pairIJCoeffs, pairIJ)
+		} else {
+			return err
+		}
+	}
 	return nil
 }
 
