@@ -58,6 +58,10 @@ func (serializer *_Serializer) Serialize() (string, error) {
 		return "", err
 	}
 	serializer.writeLine("")
+	if err := serializer.serializeVelocities(); err != nil {
+		return "", err
+	}
+	serializer.writeLine("")
 	if err := serializer.serializeBonds(); err != nil {
 		return "", err
 	}
@@ -212,6 +216,26 @@ func (serializer *_Serializer) serializeBonds() error {
 	for _, bond := range serializer.lammpsStruct.Bonds {
 		if _, err := serializer.writeLinef("%d %d %d %d",
 			bond.BondID, bond.ConnectionType, bond.Ends[0], bond.Ends[1],
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ================== Velocities ==================
+
+func (serializer *_Serializer) serializeVelocities() error {
+	if len(serializer.lammpsStruct.Velocities) == 0 {
+		return nil
+	}
+	serializer.writeLine("Velocities\n")
+	for _, velocity := range serializer.lammpsStruct.Velocities {
+		if _, err := serializer.writeLinef("%d %s %s %s",
+			velocity.AtomID,
+			strconv.FormatFloat(velocity.VX, 'e', 16, 64),
+			strconv.FormatFloat(velocity.VY, 'e', 16, 64),
+			strconv.FormatFloat(velocity.VZ, 'e', 16, 64),
 		); err != nil {
 			return err
 		}

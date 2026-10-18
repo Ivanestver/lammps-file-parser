@@ -38,16 +38,18 @@ type LammpsStruct struct {
 	Atoms          []Atom
 	PairIJCoeffs   []IPairIJ
 	AtomTypes      []AtomType
+	Velocities     []Velocity
 	Bonds          []Bond
 	BondTypes      []BondType
 	SpaceDimention [3][2]float64
 }
 
-func NewLammpsStruct(atomsCount, pairIJCoeffsCount, bondsCount, atomsTypesCount, bondsTypesCount int) *LammpsStruct {
+func NewLammpsStruct(atomsCount, pairIJCoeffsCount, velocitiesCount, bondsCount, atomsTypesCount, bondsTypesCount int) *LammpsStruct {
 	obj := &LammpsStruct{}
 	obj.Atoms = make([]Atom, atomsCount)
 	obj.PairIJCoeffs = make([]IPairIJ, pairIJCoeffsCount)
 	obj.AtomTypes = make([]AtomType, atomsTypesCount)
+	obj.Velocities = make([]Velocity, velocitiesCount)
 	obj.Bonds = make([]Bond, bondsCount)
 	obj.BondTypes = make([]BondType, bondsTypesCount)
 	return obj
@@ -84,6 +86,7 @@ type _LammpsMetadata struct {
 	atoms          _Atoms
 	bonds          []*Bond
 	pairIJCoeffs   []IPairIJ
+	velocities     []Velocity
 }
 
 type LammpsLoader struct {
@@ -133,6 +136,10 @@ func (loader *LammpsLoader) load() error {
 			}
 		} else if strings.Contains(txt, "Atoms") {
 			if err := loader.loadAtoms(); err != nil {
+				return err
+			}
+		} else if strings.Contains(txt, "Velocities") {
+			if err := loader.loadVelocities(); err != nil {
 				return err
 			}
 		} else if strings.Contains(txt, "Bonds") {
@@ -407,6 +414,48 @@ func (loader *LammpsLoader) loadAtoms() error {
 	return nil
 }
 
+func (loader *LammpsLoader) loadVelocities() error {
+	loader.scanner.Scan()
+	for loader.scanner.Scan() {
+		line := loader.scanner.Text()
+		if len(line) == 0 {
+			return nil
+		}
+		parts := strings.Split(line, " ")
+		if len(parts) != 4 {
+			return fmt.Errorf("в строке \"%s\" секции \"Velocities\" должно быть 4 параметра", line)
+		}
+
+		atomID, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return err
+		}
+
+		vx, err := strconv.ParseFloat(parts[1], 64)
+		if err != nil {
+			return err
+		}
+
+		vy, err := strconv.ParseFloat(parts[2], 64)
+		if err != nil {
+			return err
+		}
+
+		vz, err := strconv.ParseFloat(parts[3], 64)
+		if err != nil {
+			return err
+		}
+
+		loader.velocities = append(loader.velocities, Velocity{
+			AtomID: atomID,
+			VX:     vx,
+			VY:     vy,
+			VZ:     vz,
+		})
+	}
+	return nil
+}
+
 func (loader *LammpsLoader) loadBonds() error {
 	loader.scanner.Scan()
 
@@ -443,7 +492,7 @@ func (loader *LammpsLoader) loadBonds() error {
 }
 
 func (loader *LammpsLoader) constructLammpsStruct() error {
-	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.pairIJCoeffs), len(loader.bonds), len(loader.atomTypes), len(loader.bondTypes))
+	loader.builtGlobula = NewLammpsStruct(len(loader.atoms), len(loader.pairIJCoeffs), len(loader.velocities), len(loader.bonds), len(loader.atomTypes), len(loader.bondTypes))
 	for i := range loader.atoms {
 		loader.builtGlobula.Atoms[i] = *loader.atoms[i]
 	}
@@ -474,6 +523,18 @@ func (loader *LammpsLoader) constructLammpsStruct() error {
 			return 1
 		}
 	})
+
+	loader.builtGlobula.Velocities = loader.velocities
+	slices.SortFunc(loader.builtGlobula.Velocities, func(left, right Velocity) int {
+		if left.AtomID < right.AtomID {
+			return -1
+		} else if left.AtomID > right.AtomID {
+			return 1
+		} else {
+			return 0
+		}
+	})
+
 	for i := range loader.bonds {
 		loader.builtGlobula.Bonds[i] = *loader.bonds[i]
 	}
